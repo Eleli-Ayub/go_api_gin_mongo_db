@@ -8,7 +8,7 @@ func SetupStudentRoutes(router *gin.Engine) {
 		studentRoutes.POST("/addstudent", CreateStudent)
 		studentRoutes.GET("/getstudents", GetStudents)
 		studentRoutes.GET("/getsinglestudent", GetSingleStudent)
-		studentRoutes.GET("/deletestudent", DeleteStudent)
-		studentRoutes.GET("/updatestudent", UpdatStudent)
+		studentRoutes.DELETE("/deletestudent", DeleteStudent)
+		studentRoutes.PATCH("/updatestudent", UpdatStudent)
 	}
 }

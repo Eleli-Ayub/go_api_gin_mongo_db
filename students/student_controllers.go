@@ -33,7 +33,9 @@ func CreateStudent(c *gin.Context) {
 	}
 
 	data := gin.H{
+
 		"success": true,
+		"message": "student created successfully",
 		"student": inserDocResult,
 	}
 	c.JSON(http.StatusOK, data)
@@ -93,12 +95,60 @@ func GetSingleStudent(c *gin.Context) {
 		"message": "Data fetched successfully",
 		"data":    result,
 	}
-	c.JSON(http.StatusOK, gin.H{"students fetch": response})
+	c.JSON(http.StatusOK, gin.H{"student fetch": response})
 }
 func DeleteStudent(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"studens delete": "the student has been deleted"})
+
+	client, ctx, cancel, err := database.DbConnect()
+	if err != nil {
+		panic(err)
+	}
+
+	defer database.CloseDB(client, ctx, cancel)
+
+	var query interface{}
+
+	query = bson.D{
+		{"gender", "male"},
+	}
+
+	result, err := DeleteStudentQuery(client, ctx, query)
+
+	if err != nil {
+		panic(err)
+	}
+
+	response := gin.H{
+		"success": true,
+		"message": "Data Deleted successfully",
+		"result":  result,
+	}
+	c.JSON(http.StatusOK, gin.H{"students delete": response})
 }
 
 func UpdatStudent(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"studens update": "the student has been update"})
+
+	client, ctx, cancel, err := database.DbConnect()
+	if err != nil {
+		panic(err)
+	}
+
+	defer database.CloseDB(client, ctx, cancel)
+
+	var studentDetails models.Student
+
+	if err := c.ShouldBindJSON(&studentDetails); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	filter := bson.D{
+		{"name", "Chie Brenda"},
+	}
+
+	result, err := UpdateStudentQuery(client, ctx, filter, studentDetails)
+	if err != nil {
+		panic(err)
+	}
+	c.JSON(http.StatusOK, gin.H{"student update result": result})
+
 }
