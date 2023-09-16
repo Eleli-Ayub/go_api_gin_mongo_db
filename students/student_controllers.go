@@ -42,62 +42,63 @@ func CreateStudent(c *gin.Context) {
 }
 func GetStudents(c *gin.Context) {
 
-	client, ctx, cancel, err := database.DbConnect()
-	if err != nil {
-		panic(err)
-	}
-
-	defer database.CloseDB(client, ctx, cancel)
-
-	var query, field interface{}
-
-	field = bson.D{{"_id", 0}}
-	query = bson.D{{}}
-
-	var results []bson.D
-	cursor, err := QueryStudents(client, ctx, query, field)
-
-	if err := cursor.All(ctx, &results); err != nil {
-		panic(err)
-	}
-
-	response := gin.H{
-		"success": true,
-		"message": "Data fetched successfully",
-		"data":    results,
-	}
-	c.JSON(http.StatusOK, gin.H{"students fetch": response})
-}
-func GetSingleStudent(c *gin.Context) {
+	id, _ := c.GetQuery("id")
 
 	client, ctx, cancel, err := database.DbConnect()
 	if err != nil {
 		panic(err)
 	}
-
+	// close the db after the operation is done
 	defer database.CloseDB(client, ctx, cancel)
-
 	var query, field interface{}
-
 	field = bson.D{{"_id", 0}}
-	query = bson.D{
-		{"gpa", bson.D{{"$gte", 2.0}}},
+
+	// check if ID is passed
+	// return all users if ID is not passed and single user if ID is passed
+	if len(id) > 0 {
+		query = bson.D{
+			{"userid", id},
+		}
+
+		result, err := QuerySingleStudent(client, ctx, query, field)
+
+		if err != nil {
+			panic(err)
+		}
+
+		response := gin.H{
+			"success": true,
+			"message": "Data fetched successfully",
+			"data":    result,
+		}
+		c.JSON(http.StatusOK, gin.H{"student fetch": response})
+	} else {
+
+		var results []bson.D
+
+		query = bson.D{{}}
+		cursor, err := QueryStudents(client, ctx, query, field)
+		if err != nil {
+
+			c.JSON(http.StatusOK, gin.H{"error": err})
+			panic(err)
+		}
+		if err := cursor.All(ctx, &results); err != nil {
+			panic(err)
+		}
+		response := gin.H{
+			"success": true,
+			"message": "Data fetched successfully",
+			"data":    results,
+		}
+		c.JSON(http.StatusOK, gin.H{"message": response})
 	}
 
-	result, err := QuerySingleStudent(client, ctx, query, field)
-
-	if err != nil {
-		panic(err)
-	}
-
-	response := gin.H{
-		"success": true,
-		"message": "Data fetched successfully",
-		"data":    result,
-	}
-	c.JSON(http.StatusOK, gin.H{"student fetch": response})
 }
+
 func DeleteStudent(c *gin.Context) {
+
+	id := c.Param("id")
 
 	client, ctx, cancel, err := database.DbConnect()
 	if err != nil {
@@ -109,7 +110,7 @@ func DeleteStudent(c *gin.Context) {
 	var query interface{}
 
 	query = bson.D{
-		{"gender", "male"},
+		{"userid", id},
 	}
 
 	result, err := DeleteStudentQuery(client, ctx, query)

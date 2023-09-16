@@ -2,6 +2,7 @@ package models
 
 type Student struct {
 	Name        string  `json:"name"`
+	UserID      string  `json:"userid"`
 	Age         int     `json:"age"`
 	GPA         float64 `json:"gpa"`
 	Gender      string  `json:"gender"`
